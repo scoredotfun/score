@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 
 // ---------------------------
 // Type Definitions
@@ -56,13 +57,18 @@ interface PopupProps {
 // ---------------------------
 // BetPopup Component
 // ---------------------------
-const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odds, onClose }) => {
+const BetPopup: React.FC<BetPopupProps> = ({
+    game,
+    marketType,
+    selectedTeam,
+    odds,
+    onClose,
+}) => {
     const [amount, setAmount] = useState<string>("");
     const [walletKey, setWalletKey] = useState<string>("");
 
-    // Get wallet status from localStorage on component mount
     useEffect(() => {
-        const storedWalletKey = localStorage.getItem('walletKey');
+        const storedWalletKey = localStorage.getItem("walletKey");
         if (storedWalletKey) {
             setWalletKey(storedWalletKey);
         }
@@ -73,16 +79,15 @@ const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odd
             alert("Please connect your wallet first!");
             return;
         }
-
-        // Rest of betting logic
-        console.log(`Placing bet of ${amount} $SCORE on ${selectedTeam} with odds ${odds}`);
+        console.log(
+            `Placing bet of ${amount} $SCORE on ${selectedTeam} with odds ${odds}`
+        );
         onClose();
     };
 
     const calculatePotentialWinnings = () => {
         const bet = parseFloat(amount);
         if (isNaN(bet)) return 0;
-
         if (odds > 0) {
             return (bet * (odds / 100)).toFixed(2);
         } else {
@@ -97,7 +102,10 @@ const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odd
                 if (e.target === e.currentTarget) onClose();
             }}
         >
-            <div className="bg-gray-900 rounded-xl p-6 w-96 shadow-2xl border border-green-400/20 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div
+                className="bg-gray-900 rounded-xl p-6 w-96 shadow-2xl border border-green-400/20 animate-fadeIn"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-green-400">Place Bet</h3>
                     <button
@@ -122,19 +130,26 @@ const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odd
                     <div>
                         <label className="block text-sm text-gray-400 mb-1">Bet Type</label>
                         <div className="text-white">
-                            {marketType === "h2h" ? "Money Line" :
-                                marketType === "spreads" ? "Spread" : "Totals"}
+                            {marketType === "h2h"
+                                ? "Money Line"
+                                : marketType === "spreads"
+                                    ? "Spread"
+                                    : "Totals"}
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-sm text-gray-400 mb-1">Selection</label>
                         <div className="text-white font-bold">{selectedTeam}</div>
-                        <div className="text-green-400 text-sm">Odds: {odds > 0 ? `+${odds}` : odds}</div>
+                        <div className="text-green-400 text-sm">
+                            Odds: {odds > 0 ? `+${odds}` : odds}
+                        </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm text-gray-400 mb-1">Amount ($SCORE)</label>
+                        <label className="block text-sm text-gray-400 mb-1">
+                            Amount ($SCORE)
+                        </label>
                         <input
                             type="number"
                             value={amount}
@@ -159,15 +174,19 @@ const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odd
                             disabled={!amount || parseFloat(amount) <= 0 || !walletKey}
                             className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            {!walletKey ? 'Connect Wallet to Place Bet' : 'Place Bet with $SCORE'}
+                            {!walletKey
+                                ? "Connect Wallet to Place Bet"
+                                : "Place Bet with $SCORE"}
                         </button>
                     </div>
 
                     <div className="text-xs text-gray-500 text-center mt-4">
                         {!walletKey ? (
-                            <span className="text-red-400">Wallet not connected. Please connect your wallet first.</span>
+                            <span className="text-red-400">
+                                Wallet not connected. Please connect your wallet first.
+                            </span>
                         ) : (
-                            'Make sure your Solana wallet is connected before placing a bet'
+                            "Make sure your Solana wallet is connected before placing a bet"
                         )}
                     </div>
                 </div>
@@ -179,19 +198,21 @@ const BetPopup: React.FC<BetPopupProps> = ({ game, marketType, selectedTeam, odd
 // ---------------------------
 // BasketballPopup Component
 // ---------------------------
-const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initialLeague }) => {
-    const apiKey = "960601334be61607620059689f8a77b1";
+const BasketballPopup: React.FC<PopupProps> = ({
+    onClose,
+    selectedLeague: initialLeague,
+}) => {
+    const apiKey = "0b2ad96c0aa2268cc411685e5c07e47a";
 
-    // Define allowed bookmakers
+    // Allowed bookmakers and logo mapping
     const ALLOWED_BOOKMAKERS = [
-        'fanduel',
-        'draftkings',
-        'betrivers',
-        'betmgm',
-        'bovada'
+        "fanduel",
+        "draftkings",
+        "betrivers",
+        "betmgm",
+        "bovada",
     ];
 
-    // Mapping bookmaker keys to logo image paths
     const bookmakerLogos: Record<string, string> = {
         draftkings: "/images/dkinglogo.png",
         fanduel: "/images/fanduel.png",
@@ -207,7 +228,9 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
         odds: number;
     } | null>(null);
 
-    const [selectedLeague, setSelectedLeague] = useState<League | null>(initialLeague ?? null);
+    const [selectedLeague, setSelectedLeague] = useState<League | null>(
+        initialLeague ?? null
+    );
     const [leagues, setLeagues] = useState<League[]>([]);
     const [leaguesLoading, setLeaguesLoading] = useState<boolean>(false);
     const [leaguesError, setLeaguesError] = useState<string | null>(null);
@@ -230,12 +253,13 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
         totals: null,
     });
 
-    // Helper function to format outcomes
+    // Helper to format outcomes
     const formatOutcome = (outcome?: Outcome): string => {
         if (!outcome) return "-";
         if (outcome.point !== undefined) {
             const sign = outcome.point > 0 ? "+" : "";
-            return `${sign}${outcome.point} (${outcome.price > 0 ? "+" : ""}${outcome.price})`;
+            return `${sign}${outcome.point} (${outcome.price > 0 ? "+" : ""}${outcome.price
+                })`;
         }
         return outcome.price > 0 ? `+${outcome.price}` : `${outcome.price}`;
     };
@@ -267,46 +291,47 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
         }
     }, [apiKey, selectedLeague]);
 
-    // Fetch games for a given market
-    const fetchGamesForMarket = async (market: MarketType) => {
-        if (!selectedLeague) return;
-        setLoadingCache((prev) => ({ ...prev, [market]: true }));
-        setErrorCache((prev) => ({ ...prev, [market]: null }));
-        try {
-            const region = "us";
-            const oddsFormat = "american";
-            const url = `https://api.the-odds-api.com/v4/sports/${selectedLeague.key}/odds/?regions=${region}&oddsFormat=${oddsFormat}&markets=${market}&apiKey=${apiKey}`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error("Failed to fetch games");
+    // Fetch games for a given market (wrapped in useCallback)
+    const fetchGamesForMarket = useCallback(
+        async (market: MarketType) => {
+            if (!selectedLeague) return;
+            setLoadingCache((prev) => ({ ...prev, [market]: true }));
+            setErrorCache((prev) => ({ ...prev, [market]: null }));
+            try {
+                const region = "us";
+                const oddsFormat = "american";
+                const url = `https://api.the-odds-api.com/v4/sports/${selectedLeague.key}/odds/?regions=${region}&oddsFormat=${oddsFormat}&markets=${market}&apiKey=${apiKey}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch games");
+                }
+                const data: Game[] = await response.json();
+                const filteredData = data.map((game) => ({
+                    ...game,
+                    bookmakers: game.bookmakers.filter((bookmaker) =>
+                        ALLOWED_BOOKMAKERS.includes(bookmaker.key)
+                    ),
+                }));
+                setGamesCache((prev) => ({ ...prev, [market]: filteredData }));
+            } catch (err) {
+                const message =
+                    err instanceof Error ? err.message : "Unknown error fetching games.";
+                setErrorCache((prev) => ({ ...prev, [market]: message }));
+            } finally {
+                setLoadingCache((prev) => ({ ...prev, [market]: false }));
             }
-            const data: Game[] = await response.json();
+        },
+        [selectedLeague, apiKey]
+    );
 
-            // Filter games to only include allowed bookmakers
-            const filteredData = data.map(game => ({
-                ...game,
-                bookmakers: game.bookmakers.filter(bookmaker =>
-                    ALLOWED_BOOKMAKERS.includes(bookmaker.key)
-                )
-            }));
-
-            setGamesCache((prev) => ({ ...prev, [market]: filteredData }));
-        } catch (err) {
-            const message = err instanceof Error ? err.message : "Unknown error fetching games.";
-            setErrorCache((prev) => ({ ...prev, [market]: message }));
-        } finally {
-            setLoadingCache((prev) => ({ ...prev, [market]: false }));
-        }
-    };
-
-    // When a league is selected, pre-load all markets
+    // When a league is selected, preload all markets
     useEffect(() => {
         if (selectedLeague) {
             (["h2h", "spreads", "totals"] as MarketType[]).forEach((market) => {
                 fetchGamesForMarket(market);
             });
         }
-    }, [selectedLeague]);
+    }, [selectedLeague, fetchGamesForMarket]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
@@ -320,7 +345,7 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                     onClick={() => setSelectedLeague(null)}
                                     className="text-lg text-green-400 hover:text-green-300 transition-colors mr-4"
                                 >
-                                    ← Back
+
                                 </button>
                                 <h2 className="text-3xl font-extrabold tracking-wide text-green-400">
                                     {selectedLeague.title} Games
@@ -347,10 +372,16 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                 <button
                                     key={market}
                                     onClick={() => setActiveMarket(market)}
-                                    className={`px-4 py-3 text-sm font-medium relative ${activeMarket === market ? "text-green-400" : "text-gray-400 hover:text-green-400"
+                                    className={`px-4 py-3 text-sm font-medium relative ${activeMarket === market
+                                        ? "text-green-400"
+                                        : "text-gray-400 hover:text-green-400"
                                         }`}
                                 >
-                                    {market === "h2h" ? "Money Line" : market === "spreads" ? "Spread" : "Totals"}
+                                    {market === "h2h"
+                                        ? "Money Line"
+                                        : market === "spreads"
+                                            ? "Spread"
+                                            : "Totals"}
                                     {activeMarket === market && (
                                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-400" />
                                     )}
@@ -406,7 +437,8 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                     ) : (
                         // Game View
                         <>
-                            {loadingCache[activeMarket] && gamesCache[activeMarket].length === 0 ? (
+                            {loadingCache[activeMarket] &&
+                                gamesCache[activeMarket].length === 0 ? (
                                 <div className="flex items-center justify-center h-32">
                                     <div className="animate-pulse flex space-x-2">
                                         <div className="h-3 w-3 bg-green-400 rounded-full"></div>
@@ -426,13 +458,17 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                 <div className="space-y-8 p-6">
                                     {gamesCache[activeMarket].map((game: Game) => (
                                         <div key={game.id}>
-                                            {/* Game Header - Enhanced Visual Card */}
+                                            {/* Game Header */}
                                             <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-6 mb-6">
                                                 <div className="flex justify-between items-center">
                                                     <div className="flex items-center space-x-4">
-                                                        <div className="text-2xl font-bold">{game.away_team}</div>
+                                                        <div className="text-2xl font-bold">
+                                                            {game.away_team}
+                                                        </div>
                                                         <div className="text-green-400 text-xl">VS</div>
-                                                        <div className="text-2xl font-bold">{game.home_team}</div>
+                                                        <div className="text-2xl font-bold">
+                                                            {game.home_team}
+                                                        </div>
                                                     </div>
                                                     <div className="flex flex-col items-end">
                                                         <div className="text-green-400 text-sm">
@@ -477,7 +513,9 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                         </thead>
                                                         <tbody>
                                                             {game.bookmakers
-                                                                .filter(bookmaker => ALLOWED_BOOKMAKERS.includes(bookmaker.key))
+                                                                .filter((bookmaker) =>
+                                                                    ALLOWED_BOOKMAKERS.includes(bookmaker.key)
+                                                                )
                                                                 .map((bookmaker: Bookmaker) => {
                                                                     const marketData = bookmaker.markets.find(
                                                                         (m) => m.key === activeMarket
@@ -492,10 +530,12 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                                             <td className="w-[240px] py-3 px-4">
                                                                                 <div className="flex items-center gap-2">
                                                                                     {bookmakerLogos[bookmaker.key] && (
-                                                                                        <img
+                                                                                        <Image
                                                                                             src={bookmakerLogos[bookmaker.key]}
                                                                                             alt={bookmaker.title}
-                                                                                            className="w-6 h-6"
+                                                                                            width={24}
+                                                                                            height={24}
+                                                                                            className="object-contain"
                                                                                         />
                                                                                     )}
                                                                                     <span className="text-sm font-medium">
@@ -507,12 +547,14 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                                                 <>
                                                                                     <td
                                                                                         className="text-center py-3 px-4 cursor-pointer relative overflow-hidden group"
-                                                                                        onClick={() => setSelectedBet({
-                                                                                            game,
-                                                                                            marketType: activeMarket,
-                                                                                            team: "Over",
-                                                                                            odds: outcome1?.price || 0
-                                                                                        })}
+                                                                                        onClick={() =>
+                                                                                            setSelectedBet({
+                                                                                                game,
+                                                                                                marketType: activeMarket,
+                                                                                                team: "Over",
+                                                                                                odds: outcome1?.price || 0,
+                                                                                            })
+                                                                                        }
                                                                                     >
                                                                                         <div className="relative z-10 transition-transform group-hover:scale-105">
                                                                                             <span className="text-white font-medium">
@@ -523,12 +565,14 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                                                     </td>
                                                                                     <td
                                                                                         className="text-center py-3 px-4 cursor-pointer relative overflow-hidden group"
-                                                                                        onClick={() => setSelectedBet({
-                                                                                            game,
-                                                                                            marketType: activeMarket,
-                                                                                            team: "Under",
-                                                                                            odds: outcome2?.price || 0
-                                                                                        })}
+                                                                                        onClick={() =>
+                                                                                            setSelectedBet({
+                                                                                                game,
+                                                                                                marketType: activeMarket,
+                                                                                                team: "Under",
+                                                                                                odds: outcome2?.price || 0,
+                                                                                            })
+                                                                                        }
                                                                                     >
                                                                                         <div className="relative z-10 transition-transform group-hover:scale-105">
                                                                                             <span className="text-white font-medium">
@@ -542,12 +586,14 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                                                 <>
                                                                                     <td
                                                                                         className="text-center py-3 px-4 cursor-pointer relative overflow-hidden group"
-                                                                                        onClick={() => setSelectedBet({
-                                                                                            game,
-                                                                                            marketType: activeMarket,
-                                                                                            team: game.away_team,
-                                                                                            odds: outcome1?.price || 0
-                                                                                        })}
+                                                                                        onClick={() =>
+                                                                                            setSelectedBet({
+                                                                                                game,
+                                                                                                marketType: activeMarket,
+                                                                                                team: game.away_team,
+                                                                                                odds: outcome1?.price || 0,
+                                                                                            })
+                                                                                        }
                                                                                     >
                                                                                         <div className="relative z-10 transition-transform group-hover:scale-105">
                                                                                             <span className="text-white font-medium">
@@ -558,12 +604,14 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
                                                                                     </td>
                                                                                     <td
                                                                                         className="text-center py-3 px-4 cursor-pointer relative overflow-hidden group"
-                                                                                        onClick={() => setSelectedBet({
-                                                                                            game,
-                                                                                            marketType: activeMarket,
-                                                                                            team: game.home_team,
-                                                                                            odds: outcome2?.price || 0
-                                                                                        })}
+                                                                                        onClick={() =>
+                                                                                            setSelectedBet({
+                                                                                                game,
+                                                                                                marketType: activeMarket,
+                                                                                                team: game.home_team,
+                                                                                                odds: outcome2?.price || 0,
+                                                                                            })
+                                                                                        }
                                                                                     >
                                                                                         <div className="relative z-10 transition-transform group-hover:scale-105">
                                                                                             <span className="text-white font-medium">
@@ -609,58 +657,35 @@ const BasketballPopup: React.FC<PopupProps> = ({ onClose, selectedLeague: initia
 
             {/* Custom scrollbar styling */}
             <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #1a2030;
-                    border-radius: 5px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #00bfff;
-                    border-radius: 5px;
-                }
-                .custom-scrollbar {
-                    scrollbar-width: thin;
-                    scrollbar-color: #00bfff #1a2030;
-                }
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.95);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.2s ease-out forwards;
-                }
-                /* Gradient text effect */
-                .gradient-text {
-                    background: linear-gradient(to right, #00ff87, #60efff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
-                /* Smooth transitions */
-                .transition-all {
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                /* Glass effect */
-                .glass-effect {
-                    background: rgba(255, 255, 255, 0.05);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                }
-                /* Animation delay utilities */
-                .animation-delay-200 {
-                    animation-delay: 0.2s;
-                }
-                .animation-delay-400 {
-                    animation-delay: 0.4s;
-                }
-            `}</style>
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #1a2030;
+          border-radius: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #00bfff;
+          border-radius: 5px;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #00bfff #1a2030;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out forwards;
+        }
+      `}</style>
         </div>
     );
 };

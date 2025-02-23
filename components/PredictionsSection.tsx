@@ -22,15 +22,15 @@ export default function PredictionsSection() {
     const [showPopup, setShowPopup] = useState<boolean>(false);
     const [showMMAPopup, setShowMMAPopup] = useState<boolean>(false);
 
-    // State for game counts per category
-    const [gameCounts, setGameCounts] = useState({
-        All: 61,
+    // State for game counts per category (setter removed as it's not used)
+    const [gameCounts] = useState({
+        All: 63,
         Soccer: 41,
         Basketball: 6,
         "American Football": 1,
-        "Ice Hockey": 6,
+        "Ice Hockey": 7,
         Boxing: 1,
-        Baseball: 3,
+        Baseball: 4,
         MMA: 1,
     });
 
@@ -44,15 +44,12 @@ export default function PredictionsSection() {
         Baseball: [],
         MMA: [],
     });
-    const [leaguesLoading, setLeaguesLoading] = useState<boolean>(false);
-    const [leaguesError, setLeaguesError] = useState<string | null>(null);
 
     const apiKey = "960601334be61607620059689f8a77b1";
 
     // Fetch all sports leagues on component mount
     useEffect(() => {
         const fetchLeagues = async () => {
-            setLeaguesLoading(true);
             try {
                 const response = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}`);
                 const data = await response.json();
@@ -77,14 +74,9 @@ export default function PredictionsSection() {
                     }
                 });
 
-
                 setAllLeagues(groupedLeagues);
-
             } catch (error) {
-                setLeaguesError("Failed to fetch leagues");
                 console.error("Error fetching leagues:", error);
-            } finally {
-                setLeaguesLoading(false);
             }
         };
 
@@ -126,7 +118,9 @@ export default function PredictionsSection() {
 
     // Determine if the selected league is a championship bet (e.g. contains "championship winner")
     const isChampionship =
-        selectedLeague && (selectedLeague.title.toLowerCase().includes("championship winner") || selectedLeague.title.toLowerCase().includes("world series winner"));
+        selectedLeague &&
+        (selectedLeague.title.toLowerCase().includes("championship winner") ||
+            selectedLeague.title.toLowerCase().includes("world series winner"));
 
     return (
         <div className="relative min-h-screen bg-gradient-to-b from-[#000000] via-[#000000] to-[#000000] py-20">
@@ -217,7 +211,7 @@ export default function PredictionsSection() {
                 </div>
             </div>
 
-            {/* Keep existing popup rendering logic */}
+            {/* Popup rendering logic */}
             {showPopup && selectedLeague && (
                 <>
                     {isChampionship ? (
@@ -232,5 +226,3 @@ export default function PredictionsSection() {
         </div>
     );
 }
-
-

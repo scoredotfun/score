@@ -1,7 +1,5 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 declare global {
     interface Window {
@@ -15,21 +13,27 @@ declare global {
     }
 }
 
+type PhantomProvider = {
+    isPhantom?: boolean;
+    connect: () => Promise<{ publicKey: { toString: () => string } }>;
+    disconnect: () => Promise<void>;
+};
+
 export default function Header() {
-    const [provider, setProvider] = useState<any>(null);
+    const [provider, setProvider] = useState<PhantomProvider | null>(null);
     const [walletKey, setWalletKey] = useState<string>("");
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const getProvider = () => {
-                if ('phantom' in window) {
+        if (typeof window !== "undefined") {
+            const getProvider = (): PhantomProvider | null => {
+                if ("phantom" in window) {
                     const provider = window.phantom?.solana;
-
                     if (provider?.isPhantom) {
                         return provider;
                     }
                 }
-                window.open('https://phantom.app/', '_blank');
+                window.open("https://phantom.app/", "_blank");
+                return null;
             };
 
             setProvider(getProvider());
@@ -37,21 +41,23 @@ export default function Header() {
     }, []);
 
     const connectWallet = async () => {
+        if (!provider) return;
         try {
             const resp = await provider.connect();
             const publicKey = resp.publicKey.toString();
             setWalletKey(publicKey);
-            localStorage.setItem('walletKey', publicKey);
+            localStorage.setItem("walletKey", publicKey);
         } catch (err) {
             console.error("Connection failed:", err);
         }
     };
 
     const disconnectWallet = async () => {
+        if (!provider) return;
         try {
             await provider.disconnect();
             setWalletKey("");
-            localStorage.removeItem('walletKey');
+            localStorage.removeItem("walletKey");
         } catch (err) {
             console.error("Disconnection failed:", err);
         }
@@ -78,14 +84,16 @@ export default function Header() {
                     <nav className="flex items-center gap-8">
                         {/* X (Twitter) Link */}
                         <button
-                            onClick={() => window.open('https://x.com/scoreonsol', '_blank')}
+                            onClick={() => window.open("https://x.com/scoreonsol", "_blank")}
                             className="hover:opacity-80 transition-opacity"
                         >
                             <img
-                                src="/images/x.jpg"
+                                src="/images/x.png"
                                 alt="X (Twitter)"
-                                width={32}
-                                height={32}
+                                width={28}
+                                height={28}
+                                style={{ filter: 'invert(1)' }}
+
                                 className="object-contain"
                             />
                         </button>
@@ -122,7 +130,7 @@ export default function Header() {
                                 />
                                 {walletKey
                                     ? `DISCONNECT (${walletKey.slice(0, 4)}...${walletKey.slice(-4)})`
-                                    : 'Connect Wallet'}
+                                    : "Connect Wallet"}
                             </div>
                         </button>
                     </nav>
