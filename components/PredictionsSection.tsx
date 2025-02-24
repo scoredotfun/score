@@ -23,7 +23,7 @@ export default function PredictionsSection() {
     const [showMMAPopup, setShowMMAPopup] = useState<boolean>(false);
 
     // State for game counts per category (setter removed as it's not used)
-    const [gameCounts] = useState({
+    const [gameCounts] = useState<Record<string, number>>({
         All: 63,
         Soccer: 41,
         Basketball: 6,
@@ -33,6 +33,7 @@ export default function PredictionsSection() {
         Baseball: 4,
         MMA: 1,
     });
+
 
     // State for all sports leagues
     const [allLeagues, setAllLeagues] = useState<{ [key: string]: League[] }>({
